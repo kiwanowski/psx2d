@@ -1,0 +1,10 @@
+build/*
+.vscode/*
+*.dll
+*.exe
+*.iso
+*.bin
+*.tpj
+*.cnf
+*.xa
+*.mid
