@@ -9,18 +9,21 @@
 
 /*
  * engine_renderer_init — call once at startup, after ResetGraph(0).
- *   Sets up double-buffered DISP/DRAW environments, loads the debug font,
- *   uploads all theme CLUTs to VRAM, resets the VRAM allocator.
+ *   and resets the VRAM allocator.  Theme CLUTs are NOT uploaded here;
+ *   call engine_renderer_set_theme() to activate a theme on demand.
  */
 void engine_renderer_init(void);
 
 /*
  * engine_renderer_load_atlas — upload a TIM sprite atlas to VRAM.
  *   tim_data : pointer to the raw TIM blob (e.g. from psn00bsdk_target_incbin)
+ *   out_clut : if non-NULL, receives the packed CLUT word for the TIM's
+ *              embedded palette (0 for 16bpp TIMs with no CLUT).  Pass NULL
+ *              if the TIM uses the active theme palette instead.
  *   Returns the packed tpage word for use in POLY_FT4.tpage.
  *   Call after engine_renderer_init().
  */
-uint16_t engine_renderer_load_atlas(const uint32_t *tim_data);
+uint16_t engine_renderer_load_atlas(const uint32_t *tim_data, uint16_t *out_clut);
 
 /* Per-frame bookends — call at start and end of every game-loop tick */
 void engine_renderer_begin_frame(void);

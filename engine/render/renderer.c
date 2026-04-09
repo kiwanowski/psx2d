@@ -52,20 +52,34 @@ void engine_renderer_init(void)
     FntLoad(960, 0);
     FntOpen(4, 16, ENGINE_SCREEN_W - 8, ENGINE_SCREEN_H - 8, 0, 512);
 
-    /* Upload all theme CLUTs to VRAM (y=480, one slot per theme) */
-    for (i = 0; i < ENGINE_THEME_COUNT; i++)
-        vram_upload_clut(i, g_engine_themes[i].colors);
-
-    s_clut = vram_get_clut_word(0); /* default to theme 0's CLUT */
+    /* Theme CLUTs are uploaded on demand in engine_renderer_set_theme().
+       s_clut = 0 until the game explicitly activates a theme. */
+    s_clut = 0;
 }
 
 /* ── engine_renderer_load_atlas ──────────────────────────────────────────── */
-uint16_t engine_renderer_load_atlas(const uint32_t *tim_data)
+uint16_t engine_renderer_load_atlas(const uint32_t *tim_data, uint16_t *out_clut)
 {
     TIM_IMAGE tim;
     GetTimInfo(tim_data, &tim);
     LoadImage(tim.prect, tim.paddr);
     DrawSync(0);
+
+    /* Upload the TIM's embedded CLUT (present for 4bpp and 8bpp modes) */
+    if (out_clut)
+    {
+        if (tim.crect && tim.crect->w > 0)
+        {
+            LoadImage(tim.crect, tim.caddr);
+            DrawSync(0);
+            *out_clut = (uint16_t)getClut(tim.crect->x, tim.crect->y);
+        }
+        else
+        {
+            *out_clut = 0; /* 16bpp — no CLUT */
+        }
+    }
+
     return (uint16_t)getTPage(tim.mode & 0x3, 0, tim.prect->x, tim.prect->y);
 }
 
